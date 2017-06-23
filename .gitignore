@@ -1,4 +1,5 @@
 # coustom
+.env
 .pyenv/
 
 # Byte-compiled / optimized / DLL files

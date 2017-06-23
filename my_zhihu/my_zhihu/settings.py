@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
 import os
+import dotenv
+from django.contrib.messages import constants as message_constants
+
+dotenv.read_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'zhihu',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +79,12 @@ WSGI_APPLICATION = 'my_zhihu.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
     }
 }
 
@@ -105,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -113,8 +121,44 @@ USE_L10N = True
 
 USE_TZ = True
 
+MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# celery
+
+BROKER_URL = os.environ.get('BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_ENABLE_UTC = True
+CELERYD_MAX_TASKS_PER_CHILD = 1
+CELERYD_CONCURRENCY = 1
+
+# scrapy
+SCRAPY = {
+    'LOG_LEVEL': 'INFO',
+    'ITEM_PIPELINES': {
+        # 'scraper.pipelines.StorePipeline': 500,
+    },
+    'EXTENSIONS': {
+        # 'dispatcher.spiders.extensions.TaskError': 300,
+    },
+    'DOWNLOADER_MIDDLEWARES': {
+    },
+
+    'DOWNLOAD_DELAY': 2,
+    'AUTOTHROTTLE_ENABLED': True,
+    'AUTOTHROTTLE_START_DELAY': 1,
+    'AUTOTHROTTLE_MAX_DELAY': 10,
+    'AUTOTHROTTLE_TARGET_CONCURRENCY': 6,
+    'DOWNLOAD_TIMEOUT': 800,
+}
